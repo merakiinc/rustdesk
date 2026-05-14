@@ -392,6 +392,16 @@ pub fn core_main() -> Option<Vec<String>> {
                     log::info!("Runtime password set from --password argument (not persisted)");
                 }
             }
+            {
+                let id = config::Config::get_id();
+                log::info!("RustDesk ID: {}", id);
+                println!("{}", id);
+                let id_file = std::env::temp_dir().join("rustdesk-id.txt");
+                if let Ok(mut f) = std::fs::File::create(&id_file) {
+                    use std::io::Write;
+                    writeln!(f, "{}", id).ok();
+                }
+            }
             #[cfg(target_os = "linux")]
             {
                 hbb_common::allow_err!(crate::platform::check_autostart_config());
