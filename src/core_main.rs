@@ -379,6 +379,19 @@ pub fn core_main() -> Option<Vec<String>> {
             return None;
         } else if args[0] == "--server" {
             log::info!("start --server with user {}", crate::username());
+            // Set a runtime-only password via --server --password <senha>.
+            // Stored in HARD_SETTINGS (in-memory only, never written to disk).
+            // Takes precedence over any stored permanent password for this session.
+            if let Some(pos) = args.iter().position(|a| a == "--password") {
+                if pos + 1 < args.len() && !args[pos + 1].starts_with("--") {
+                    let password = args[pos + 1].clone();
+                    config::HARD_SETTINGS
+                        .write()
+                        .unwrap()
+                        .insert("password".to_owned(), password);
+                    log::info!("Runtime password set from --password argument (not persisted)");
+                }
+            }
             #[cfg(target_os = "linux")]
             {
                 hbb_common::allow_err!(crate::platform::check_autostart_config());
