@@ -10,7 +10,6 @@ env:
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   VERSION: "1.4.6"
-  UPLOAD_ARTIFACT: "true"
 
 jobs:
   generate-bridge:
@@ -109,12 +108,11 @@ jobs:
             exit 1
           fi
 
-      - name: Build rustdesk (flutter + rust)
+      - name: Build rustdesk
         run: python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
 
       - name: Collect build output
-        run: |
-          mv ./flutter/build/windows/x64/runner/Release ./rustdesk
+        run: mv ./flutter/build/windows/x64/runner/Release ./rustdesk
 
       - name: Add usbmmidd driver
         continue-on-error: true
@@ -132,11 +130,40 @@ jobs:
           name: topmostwindow-artifacts
           path: "./rustdesk"
 
-      - name: Upload artifact
+      - name: Find and copy Runner.res for portable packer
+        continue-on-error: true
+        shell: bash
+        run: |
+          runner_res=$(find . -name "Runner.res")
+          if [ "$runner_res" != "" ]; then
+            cp $runner_res ./libs/portable/Runner.res
+          fi
+
+      - name: Build portable executable
+        shell: bash
+        run: |
+          sed -i '/dpiAware/d' res/manifest.xml
+          pushd ./libs/portable
+          pip3 install -r requirements.txt
+          python3 ./generate.py -f ../../rustdesk/ -o . -e ../../rustdesk/rustdesk.exe
+          popd
+          mkdir -p ./SignOutput
+          mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-x86_64.exe
+
+      - name: Upload unsigned folder (DLLs + exe)
         if: always()
         uses: actions/upload-artifact@master
         with:
-          name: rustdesk-windows-x86_64
+          name: rustdesk-unsigned-windows-x86_64
           path: rustdesk
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload portable executable
+        if: always()
+        uses: actions/upload-artifact@master
+        with:
+          name: rustdesk-portable-windows-x86_64
+          path: SignOutput/rustdesk-${{ env.VERSION }}-x86_64.exe
           if-no-files-found: warn
           retention-days: 7
