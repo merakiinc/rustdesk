@@ -10,6 +10,7 @@ env:
   VCPKG_COMMIT_ID: "120deac3062162151622ca4860575a33844ba10b"
   VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
   VERSION: "1.4.6"
+  UPLOAD_ARTIFACT: "true"
 
 jobs:
   generate-bridge:
@@ -104,31 +105,38 @@ jobs:
               echo "======"
               cat "$_1"
               echo "======"
-              echo ""
             done
             exit 1
           fi
 
-      - name: Build rustdesk
+      - name: Build rustdesk (flutter + rust)
+        run: python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
+
+      - name: Collect build output
         run: |
-          python3 .\build.py --portable --hwcodec --flutter --vram --skip-portable-pack
           mv ./flutter/build/windows/x64/runner/Release ./rustdesk
 
+      - name: Add usbmmidd driver
+        continue-on-error: true
+        run: |
           Invoke-WebRequest -Uri https://github.com/rustdesk-org/rdev/releases/download/usbmmidd_v2/usbmmidd_v2.zip -OutFile usbmmidd_v2.zip
           Expand-Archive usbmmidd_v2.zip -DestinationPath .
           Remove-Item -Path usbmmidd_v2\Win32 -Recurse
           Remove-Item -Path "usbmmidd_v2\deviceinstaller64.exe", "usbmmidd_v2\deviceinstaller.exe", "usbmmidd_v2\usbmmidd.bat"
           mv -Force .\usbmmidd_v2 ./rustdesk
 
-      - name: Download RustDeskTempTopMostWindow artifacts
+      - name: Download RustDeskTempTopMostWindow
+        continue-on-error: true
         uses: actions/download-artifact@master
         with:
           name: topmostwindow-artifacts
           path: "./rustdesk"
 
-      - name: Upload Windows artifact
+      - name: Upload artifact
+        if: always()
         uses: actions/upload-artifact@master
         with:
           name: rustdesk-windows-x86_64
           path: rustdesk
+          if-no-files-found: warn
           retention-days: 7
