@@ -58,6 +58,7 @@ impl RendezvousMediator {
     }
 
     pub async fn start_all() {
+        log::info!("start_all: server starting (diagnostic build)");
         crate::test_nat_type();
         if config::is_outgoing_only() {
             loop {
@@ -274,6 +275,16 @@ impl RendezvousMediator {
         server: &ServerPtr,
         update_latency: &mut impl FnMut(),
     ) -> ResultType<()> {
+        match &msg {
+            Some(rendezvous_message::Union::RegisterPeerResponse(_))
+            | Some(rendezvous_message::Union::RegisterPkResponse(_)) => {}
+            Some(rendezvous_message::Union::PunchHole(_)) => log::info!("handle_resp: PunchHole"),
+            Some(rendezvous_message::Union::RequestRelay(_)) => log::info!("handle_resp: RequestRelay"),
+            Some(rendezvous_message::Union::FetchLocalAddr(_)) => log::info!("handle_resp: FetchLocalAddr"),
+            Some(rendezvous_message::Union::ConfigureUpdate(_)) => log::info!("handle_resp: ConfigureUpdate"),
+            Some(_) => log::info!("handle_resp: Other"),
+            None => log::info!("handle_resp: None"),
+        }
         match msg {
             Some(rendezvous_message::Union::RegisterPeerResponse(rpr)) => {
                 update_latency();

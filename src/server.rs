@@ -194,6 +194,7 @@ pub async fn create_tcp_connection(
     secure: bool,
     control_permissions: Option<ControlPermissions>,
 ) -> ResultType<()> {
+    log::info!("create_tcp_connection from {}", addr);
     let mut stream = stream;
     let id = server.write().unwrap().get_new_id();
     let (sk, pk) = Config::get_key_pair();
