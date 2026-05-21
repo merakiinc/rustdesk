@@ -311,6 +311,7 @@ impl RendezvousMediator {
                 });
             }
             Some(rendezvous_message::Union::RequestRelay(rr)) => {
+                log::info!("Incoming relay request from peer");
                 let rz = self.clone();
                 let server = server.clone();
                 tokio::spawn(async move {
@@ -318,6 +319,7 @@ impl RendezvousMediator {
                 });
             }
             Some(rendezvous_message::Union::FetchLocalAddr(fla)) => {
+                log::info!("Incoming LAN connection request");
                 let rz = self.clone();
                 let server = server.clone();
                 tokio::spawn(async move {
