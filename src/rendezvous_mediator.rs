@@ -286,6 +286,7 @@ impl RendezvousMediator {
                 update_latency();
                 match rpr.result.enum_value() {
                     Ok(register_pk_response::Result::OK) => {
+                        log::info!("Registered with rendezvous server: {}", self.host);
                         Config::set_key_confirmed(true);
                         Config::set_host_key_confirmed(&self.host_prefix, true);
                         *SOLVING_PK_MISMATCH.lock().await = "".to_owned();
@@ -571,6 +572,7 @@ impl RendezvousMediator {
 
     async fn handle_punch_hole(&self, ph: PunchHole, server: ServerPtr) -> ResultType<()> {
         let mut peer_addr = AddrMangle::decode(&ph.socket_addr);
+        log::info!("Incoming connection request from {:?}", peer_addr);
         let last = *LAST_MSG.lock().await;
         *LAST_MSG.lock().await = (peer_addr, Instant::now());
         // skip duplicate punch hole messages
