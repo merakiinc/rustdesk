@@ -5,7 +5,9 @@
       "Bash(git add *)",
       "Bash(git commit *)",
       "Bash(git push *)",
-      "Bash(Select-Object Name)"
+      "Bash(Select-Object Name)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Leo\\\\OneDrive\\\\Documentos\\\\GitHub\\\\rustdesk\" -Directory)",
+      "Bash(Select-Object -First 20)"
     ]
   }
 }

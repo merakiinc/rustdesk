@@ -187,6 +187,12 @@ impl<T: InvokeUiSession> Remote<T> {
                     self.handler
                         .set_fingerprint(crate::common::pk_to_fingerprint(pk.unwrap_or_default()));
                 }
+                log::info!(
+                    "Connected to {} via {} ({})",
+                    self.handler.get_id(),
+                    if direct { "direct" } else { "relay" },
+                    stream_type
+                );
 
                 // just build for now
                 #[cfg(not(any(target_os = "windows", feature = "unix-file-copy-paste")))]
@@ -318,7 +324,7 @@ impl<T: InvokeUiSession> Remote<T> {
                         }
                     }
                 }
-                log::debug!("Exit io_loop of id={}", self.handler.get_id());
+                log::info!("Disconnected from {}", self.handler.get_id());
                 // Stop client audio server.
                 if let Some(s) = self.stop_voice_call_sender.take() {
                     s.send(()).ok();

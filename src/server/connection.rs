@@ -1314,7 +1314,7 @@ impl Connection {
     }
 
     async fn on_open(&mut self, addr: SocketAddr) -> bool {
-        log::debug!("#{} Connection opened from {}.", self.inner.id, addr);
+        log::info!("#{} Connection opened from {}.", self.inner.id, addr);
         if !self.check_whitelist(&addr).await {
             return false;
         }
