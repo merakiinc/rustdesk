@@ -210,7 +210,8 @@ impl RendezvousMediator {
             select! {
                 n = socket.next() => {
                     match n {
-                        Some(Ok((bytes, _))) => {
+                        Some(Ok((bytes, from))) => {
+                            log::info!("udp packet received: {} bytes from {:?}", bytes.len(), from);
                             if let Ok(msg) = Message::parse_from_bytes(&bytes) {
                                 rz.handle_resp(msg.union, Sink::Framed(&mut socket, &addr), &server, &mut update_latency).await?;
                             } else {
@@ -238,6 +239,7 @@ impl RendezvousMediator {
                         }
                     }
                     if timeout || (last_register_sent.is_none() && expired) {
+                        log::info!("udp keepalive: fails={} timeout={} expired={}", fails, timeout, expired);
                         if timeout {
                             fails += 1;
                             if fails >= MAX_FAILS2 {
