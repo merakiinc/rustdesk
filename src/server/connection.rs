@@ -1564,6 +1564,14 @@ impl Connection {
         self.post_conn_audit(
             json!({"peer": ((&self.lr.my_id, &self.lr.my_name)), "type": conn_type}),
         );
+        log::info!(
+            "#{} Authenticated: peer_id={} name={} platform={} ip={}",
+            self.inner.id(),
+            self.lr.my_id,
+            self.lr.my_name,
+            self.lr.my_platform,
+            self.ip
+        );
         #[allow(unused_mut)]
         let mut username = crate::platform::get_active_username();
         let mut res = LoginResponse::new();
@@ -4624,7 +4632,14 @@ impl Connection {
         // We can add a (Vec<conn_id>, input device) to avoid this.
         // But it's not necessary now and we have to consider two audio services(client, server).
         crate::audio_service::set_voice_call_input_device(None, true);
-        log::info!("#{} Connection closed: {}", self.inner.id(), reason);
+        log::info!(
+            "#{} Connection closed: {} (peer_id={} name={} ip={})",
+            self.inner.id(),
+            reason,
+            self.lr.my_id,
+            self.lr.my_name,
+            self.ip
+        );
         if lock && self.lock_after_session_end && self.keyboard {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             lock_screen().await;
