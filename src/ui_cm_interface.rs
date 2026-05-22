@@ -544,7 +544,7 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
                         Ok(Some(data)) => {
                             match data {
                                 Data::Login{id, is_file_transfer, is_view_camera, is_terminal, port_forward, peer_id, name, avatar, authorized, keyboard, clipboard, audio, file, file_transfer_enabled: _file_transfer_enabled, restart, recording, block_input, privacy_mode, from_switch} => {
-                                    log::debug!("conn_id: {}", id);
+                                    log::info!("cm::Login id={} peer_id={} name={} authorized={} file_transfer={} view_camera={} terminal={}", id, peer_id, name, authorized, is_file_transfer, is_view_camera, is_terminal);
                                     self.cm.add_connection(id, is_file_transfer, is_view_camera, is_terminal, port_forward, peer_id, name, avatar, authorized, keyboard, clipboard, audio, file, restart, recording, block_input, privacy_mode, from_switch, self.tx.clone());
                                     self.conn_id = id;
                                     #[cfg(target_os = "windows")]
@@ -823,11 +823,12 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
             task_runner.run().await;
         }
         if task_runner.conn_id > 0 {
+            log::info!("cm::remove_connection id={} close={}", task_runner.conn_id, task_runner.close);
             task_runner
                 .cm
                 .remove_connection(task_runner.conn_id, task_runner.close);
         }
-        log::debug!("ipc task end");
+        log::info!("cm::ipc task end conn_id={}", task_runner.conn_id);
     }
 }
 
@@ -899,6 +900,7 @@ pub async fn start_listen<T: InvokeUiCM>(
                 from_switch,
                 ..
             }) => {
+                log::info!("cm(android)::Login id={} peer_id={} name={} authorized={}", id, peer_id, name, authorized);
                 current_id = id;
                 cm.add_connection(
                     id,
@@ -939,6 +941,7 @@ pub async fn start_listen<T: InvokeUiCM>(
                 .await;
             }
             Some(Data::Close) => {
+                log::info!("cm(android)::Close id={}", current_id);
                 break;
             }
             Some(Data::StartVoiceCall) => {
@@ -951,11 +954,13 @@ pub async fn start_listen<T: InvokeUiCM>(
                 cm.voice_call_closed(current_id, reason.as_str());
             }
             None => {
+                log::info!("cm(android)::channel closed id={}", current_id);
                 break;
             }
             _ => {}
         }
     }
+    log::info!("cm(android)::remove_connection id={}", current_id);
     cm.remove_connection(current_id, true);
 }
 

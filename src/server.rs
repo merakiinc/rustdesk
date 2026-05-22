@@ -384,6 +384,7 @@ impl Server {
     }
 
     pub fn add_connection(&mut self, conn: ConnInner, noperms: &Vec<&'static str>) {
+        log::info!("server::add_connection id={} total={}", conn.id(), self.connections.len() + 1);
         let primary_video_service_name = video_service::get_service_name(
             VideoSource::Monitor,
             *display_service::PRIMARY_DISPLAY_IDX,
@@ -403,6 +404,7 @@ impl Server {
     }
 
     pub fn remove_connection(&mut self, conn: &ConnInner) {
+        log::info!("server::remove_connection id={} remaining={}", conn.id(), self.connections.len().saturating_sub(1));
         for s in self.services.values() {
             s.on_unsubscribe(conn.id());
         }
