@@ -98,18 +98,21 @@ impl RendezvousMediator {
             let timeout = Arc::new(RwLock::new(CONNECT_TIMEOUT));
             let conn_start_time = Instant::now();
             *SOLVING_PK_MISMATCH.lock().await = "".to_owned();
-            if !config::option2bool("stop-service", &Config::get_option("stop-service"))
-                && !crate::platform::installing_service()
+            let stop_service = config::option2bool("stop-service", &Config::get_option("stop-service"));
+            let installing = crate::platform::installing_service();
+            log::info!("rendezvous loop: stop_service={} installing_service={}", stop_service, installing);
+            if !stop_service && !installing
             {
                 let mut futs = Vec::new();
                 let servers = Config::get_rendezvous_servers();
+                log::info!("rendezvous servers: {:?}", servers);
                 SHOULD_EXIT.store(false, Ordering::SeqCst);
                 MANUAL_RESTARTED.store(false, Ordering::SeqCst);
                 for host in servers.clone() {
                     let server = server.clone();
                     let timeout = timeout.clone();
                     futs.push(tokio::spawn(async move {
-                        if let Err(err) = Self::start(server, host).await {
+                        if let Err(err) = Self::start(server, host.clone()).await {
                             let err = format!("rendezvous mediator error: {err}");
                             // When user reboot, there might be below error, waiting too long
                             // (CONNECT_TIMEOUT 18s) will make user think there is bug
@@ -119,6 +122,8 @@ impl RendezvousMediator {
                                 *timeout.write().unwrap() = 3000;
                             }
                             log::error!("{err}");
+                        } else {
+                            log::info!("rendezvous mediator {} exited normally", host);
                         }
                         // SHOULD_EXIT here is to ensure once one exits, the others also exit.
                         SHOULD_EXIT.store(true, Ordering::SeqCst);
@@ -126,10 +131,12 @@ impl RendezvousMediator {
                 }
                 join_all(futs).await;
             } else {
+                log::warn!("rendezvous: service stopped or installing, closing connections and waiting (stop_service={} installing={})", stop_service, installing);
                 server.write().unwrap().close_connections();
             }
             Config::reset_online();
             let timeout = *timeout.read().unwrap();
+            log::info!("rendezvous loop iteration done, waiting {}ms before retry", timeout);
             if !MANUAL_RESTARTED.load(Ordering::SeqCst) {
                 let elapsed = conn_start_time.elapsed().as_millis() as u64;
                 if elapsed < timeout {
@@ -414,15 +421,23 @@ impl RendezvousMediator {
     }
 
     pub async fn start(server: ServerPtr, host: String) -> ResultType<()> {
-        log::info!("start rendezvous mediator of {}", host);
+        let is_proxy = Config::is_proxy();
+        let ws = use_ws();
+        let udp_disabled = crate::is_udp_disabled();
+        log::info!(
+            "start rendezvous mediator of {} (proxy={} ws={} udp_disabled={})",
+            host, is_proxy, ws, udp_disabled
+        );
         //If the investment agent type is http or https, then tcp forwarding is enabled.
         if (cfg!(debug_assertions) && option_env!("TEST_TCP").is_some())
-            || Config::is_proxy()
-            || use_ws()
-            || crate::is_udp_disabled()
+            || is_proxy
+            || ws
+            || udp_disabled
         {
+            log::info!("start rendezvous mediator of {} via TCP/WS", host);
             Self::start_tcp(server, host).await
         } else {
+            log::info!("start rendezvous mediator of {} via UDP", host);
             Self::start_udp(server, host).await
         }
     }
