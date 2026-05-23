@@ -7,7 +7,12 @@
       "Bash(git push *)",
       "Bash(Select-Object Name)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Leo\\\\OneDrive\\\\Documentos\\\\GitHub\\\\rustdesk\" -Directory)",
-      "Bash(Select-Object -First 20)"
+      "Bash(Select-Object -First 20)",
+      "PowerShell(Get-ChildItem *)",
+      "Bash(cargo metadata *)",
+      "Bash(python3 -c \"import sys,json; m=json.load\\(sys.stdin\\); [print\\(p['id'],p.get\\('manifest_path',''\\)\\) for p in m['packages'] if 'hbb_common' in p['name']]\")",
+      "PowerShell(Get-Service *)",
+      "PowerShell(sc.exe query RustDesk 2>&1)"
     ]
   }
 }
