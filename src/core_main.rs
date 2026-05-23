@@ -162,7 +162,7 @@ pub fn core_main() -> Option<Vec<String>> {
     {
         let mut log_dir = hbb_common::config::Config::log_path();
         if !log_name.is_empty() { log_dir.push(&log_name); }
-        log::info!("PID={} log_dir={}", std::process::id(), log_dir.display());
+        log::error!("PROCESS_START pid={} log_name='{}' log_dir={}", std::process::id(), log_name, log_dir.display());
     }
 
     // linux uni (url) go here.

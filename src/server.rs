@@ -593,6 +593,7 @@ pub async fn start_server(is_server: bool, no_server: bool) {
     });
 
     if is_server {
+        log::error!("START_SERVER pid={} (is_server=true)", std::process::id());
         crate::common::set_server_running(true);
         std::thread::spawn(move || {
             if let Err(err) = crate::ipc::start("") {
@@ -640,12 +641,12 @@ pub async fn start_server(is_server: bool, no_server: bool) {
                 crate::ipc::client_get_hwcodec_config_thread(0);
             }
             Err(err) => {
-                log::info!("server not started: {err:?}, no_server: {no_server}");
+                log::error!("START_SERVER fallback pid={}: server not started ({err:?}), no_server={no_server}", std::process::id());
                 if no_server {
                     hbb_common::sleep(1.0).await;
                     std::thread::spawn(|| start_server(false, true));
                 } else {
-                    log::info!("try start server");
+                    log::error!("START_SERVER fallback pid={}: calling start_server(true,false) from this process", std::process::id());
                     std::thread::spawn(|| start_server(true, false));
                 }
             }

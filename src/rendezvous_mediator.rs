@@ -444,6 +444,7 @@ impl RendezvousMediator {
 
     async fn handle_request_relay(&self, rr: RequestRelay, server: ServerPtr) -> ResultType<()> {
         let addr = AddrMangle::decode(&rr.socket_addr);
+        log::error!("RELAY_REQUEST pid={} from={:?}", std::process::id(), addr);
         let last = *LAST_RELAY_MSG.lock().await;
         *LAST_RELAY_MSG.lock().await = (addr, Instant::now());
         // skip duplicate relay request messages

@@ -409,6 +409,7 @@ impl Connection {
         // Android is not supported yet, so we always set control_permissions to None.
         #[cfg(target_os = "android")]
         let control_permissions = None;
+        log::error!("CONNECTION_START id={} pid={} addr={}", id, std::process::id(), addr);
         let _raii_id = raii::ConnectionID::new(id);
         let _raii_control_permissions_id =
             raii::ControlPermissionsID::new(id, &control_permissions);
