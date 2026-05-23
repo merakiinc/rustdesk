@@ -467,10 +467,11 @@ pub async fn start(postfix: &str) -> ResultType<()> {
                         }
                     }
                     tokio::spawn(async move {
+                        log::info!("ipc '{}' connection spawned", postfix);
                         loop {
                             match stream.next().await {
                                 Err(err) => {
-                                    log::trace!("ipc '{}' connection closed: {}", postfix, err);
+                                    log::info!("ipc '{}' connection closed: {}", postfix, err);
                                     break;
                                 }
                                 Ok(Some(data)) => {

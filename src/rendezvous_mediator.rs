@@ -556,7 +556,7 @@ impl RendezvousMediator {
         socket_addr_v6: bytes::Bytes,
     ) -> ResultType<()> {
         let peer_addr = AddrMangle::decode(&fla.socket_addr);
-        log::debug!("Handle intranet from {:?}", peer_addr);
+        log::info!("INTRANET connection attempt from peer={:?}", peer_addr);
         let mut socket = connect_tcp(&*self.host, CONNECT_TIMEOUT).await?;
         let local_addr = socket.local_addr();
         // we saw invalid local_addr while using proxy, local_addr.ip() == "::1"
@@ -893,6 +893,7 @@ async fn udp_nat_listen(
     server: ServerPtr,
     control_permissions: Option<ControlPermissions>,
 ) -> ResultType<()> {
+    log::info!("UDP NAT punch connection attempt: peer={} peer_v4={}", peer_addr, peer_addr_v4);
     let tm = Instant::now();
     let socket_cloned = socket.clone();
     let func = async {

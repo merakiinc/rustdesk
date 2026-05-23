@@ -624,6 +624,7 @@ impl Connection {
                             }
                         }
                         ipc::Data::Close => {
+                            log::info!("#{} CM sent Close (user rejected/closed)", conn.inner.id());
                             conn.chat_unanswered = false; // seen
                             conn.file_transferred = false; //seen
                             conn.send_close_reason_no_retry("").await;
@@ -632,6 +633,7 @@ impl Connection {
                         }
                         ipc::Data::CmErr(e) => {
                             if e != "expected" {
+                                log::warn!("#{} CM error: {}", conn.inner.id(), e);
                                 // cm closed before connection
                                 conn.on_close(&format!("connection manager error: {}", e), false).await;
                                 break;
@@ -5906,6 +5908,7 @@ mod raii {
     impl ConnectionID {
         pub fn new(id: i32) -> Self {
             ALIVE_CONNS.lock().unwrap().push(id);
+            log::info!("CONN_OPEN #{} alive={}", id, ALIVE_CONNS.lock().unwrap().len());
             Self(id)
         }
     }
@@ -5914,6 +5917,7 @@ mod raii {
         fn drop(&mut self) {
             let mut active_conns_lock = ALIVE_CONNS.lock().unwrap();
             active_conns_lock.retain(|&c| c != self.0);
+            log::info!("CONN_DROP #{} alive={}", self.0, active_conns_lock.len());
         }
     }
 
@@ -5937,6 +5941,15 @@ mod raii {
                 sender,
                 printer,
             });
+            log::info!(
+                "AUTHED_OPEN #{} type={:?} peer_id={} name={} platform={} authed_total={}",
+                conn_id,
+                conn_type,
+                lr.my_id,
+                lr.my_name,
+                lr.my_platform,
+                AUTHED_CONNS.lock().unwrap().len()
+            );
             Self::check_wake_lock();
             use std::sync::Once;
             static _ONCE: Once = Once::new();
@@ -6064,6 +6077,12 @@ mod raii {
 
     impl Drop for AuthedConnID {
         fn drop(&mut self) {
+            log::info!(
+                "AUTHED_DROP #{} type={:?} authed_remaining={}",
+                self.0,
+                self.1,
+                AUTHED_CONNS.lock().unwrap().len().saturating_sub(1)
+            );
             if self.1 == AuthConnType::Remote || self.1 == AuthConnType::ViewCamera {
                 scrap::codec::Encoder::update(scrap::codec::EncodingUpdate::Remove(self.0));
                 video_service::VIDEO_QOS
