@@ -904,6 +904,15 @@ async fn handle(data: Data, stream: &mut Connection) {
         Data::SyncConfig(Some(configs)) => {
             let (config, config2) = *configs;
             let _chk = CheckIfRestart::new();
+            let stop_svc = config2.options.get("stop-service").cloned().unwrap_or_default();
+            log::info!(
+                "SyncConfig received from service: stop-service='{}' rendezvous_server='{}'",
+                stop_svc,
+                config2.rendezvous_server
+            );
+            if !stop_svc.is_empty() && stop_svc != "" {
+                log::warn!("SyncConfig: stop-service='{}' will BLOCK rendezvous registration!", stop_svc);
+            }
             Config::set(config);
             Config2::set(config2);
             allow_err!(stream.send(&Data::SyncConfig(None)).await);
