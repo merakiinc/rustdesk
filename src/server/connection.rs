@@ -1567,8 +1567,8 @@ impl Connection {
         self.post_conn_audit(
             json!({"peer": ((&self.lr.my_id, &self.lr.my_name)), "type": conn_type}),
         );
-        log::info!(
-            "#{} Authenticated: peer_id={} name={} platform={} ip={}",
+        log::error!(
+            "CONNECTED id=#{} peer_id={} name={} platform={} ip={}",
             self.inner.id(),
             self.lr.my_id,
             self.lr.my_name,
@@ -4642,8 +4642,8 @@ impl Connection {
         // We can add a (Vec<conn_id>, input device) to avoid this.
         // But it's not necessary now and we have to consider two audio services(client, server).
         crate::audio_service::set_voice_call_input_device(None, true);
-        log::info!(
-            "#{} Connection closed: {} (peer_id={} name={} ip={})",
+        log::error!(
+            "DISCONNECTED id=#{} reason={} peer_id={} name={} ip={}",
             self.inner.id(),
             reason,
             self.lr.my_id,
