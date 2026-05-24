@@ -3934,10 +3934,6 @@ pub fn try_kill_rustdesk_main_window_process() -> ResultType<()> {
     use hbb_common::sysinfo::System;
     let mut sys = System::new();
     sys.refresh_processes();
-    let my_uid = sys
-        .process((std::process::id() as usize).into())
-        .map(|x| x.user_id())
-        .unwrap_or_default();
     let my_pid = std::process::id();
     if app_name.is_empty() {
         bail!("app name is empty");
@@ -3963,11 +3959,6 @@ pub fn try_kill_rustdesk_main_window_process() -> ResultType<()> {
         }
         // skip self
         if p.pid().as_u32() == my_pid {
-            continue;
-        }
-        // because we call it with --server, so we can check user_id, remove this if call it with user process
-        if p.user_id() == my_uid {
-            log::info!("user id equal, continue");
             continue;
         }
         log::info!("try kill process: {:?}, pid = {:?}", p.cmd(), p.pid());
