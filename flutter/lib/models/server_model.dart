@@ -554,8 +554,25 @@ class ServerModel with ChangeNotifier {
             notifyListeners();
             return;
           }
+          // Existing unauthorized client is now authorized — update in place, no new tab.
           _clients[index].authorized = true;
           _clients[index].privacyMode = client.privacyMode;
+          if (desktopType == DesktopType.cm && !hideCm) {
+            showCmWindow();
+          }
+          scrollToBottom();
+          notifyListeners();
+          if (isDesktop) {
+            Future.delayed(Duration.zero, () async {
+              if (!hideCm) windowOnTop(null);
+            });
+            cmHiddenTimer = Timer(const Duration(seconds: 3), () {
+              if (!hideCm) windowManager.minimize();
+              cmHiddenTimer = null;
+            });
+          }
+          if (isAndroid) androidUpdatekeepScreenOn();
+          return;
         }
       } else {
         final index = _clients.indexWhere((c) => c.id == client.id);
