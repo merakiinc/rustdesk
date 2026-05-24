@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 lazy_static = "1.4"
-hbb_common = { git = "https://github.com/merakiinc/hbb_common" }
+hbb_common = { path = "../../libs/hbb_common" }

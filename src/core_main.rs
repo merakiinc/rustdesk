@@ -397,6 +397,16 @@ pub fn core_main() -> Option<Vec<String>> {
                     log::info!("Runtime password set from --password argument (not persisted)");
                 }
             }
+            if let Some(pos) = args.iter().position(|a| a == "--id") {
+                if pos + 1 < args.len() && !args[pos + 1].starts_with("--") {
+                    let fixed_id = args[pos + 1].clone();
+                    config::HARD_SETTINGS
+                        .write()
+                        .unwrap()
+                        .insert("id".to_owned(), fixed_id.clone());
+                    log::info!("Fixed ID set from --id argument: {} (not persisted, overrides UUID_MISMATCH reassignment)", fixed_id);
+                }
+            }
             {
                 let id = config::Config::get_id();
                 log::info!("RustDesk ID: {}", id);
