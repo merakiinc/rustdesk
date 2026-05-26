@@ -167,6 +167,8 @@ struct IpcTaskRunner<T: InvokeUiCM> {
     file_transfer_enabled_peer: bool,
     /// Read jobs for CM-side file reading (server to client transfers)
     read_jobs: Vec<fs::TransferJob>,
+    connected_at: Option<hbb_common::tokio::time::Instant>,
+    connected_peer: String,
 }
 
 lazy_static::lazy_static! {
@@ -545,6 +547,11 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
                             match data {
                                 Data::Login{id, is_file_transfer, is_view_camera, is_terminal, port_forward, peer_id, name, avatar, authorized, keyboard, clipboard, audio, file, file_transfer_enabled: _file_transfer_enabled, restart, recording, block_input, privacy_mode, from_switch} => {
                                     log::info!("cm::Login id={} peer_id={} name={} authorized={} file_transfer={} view_camera={} terminal={}", id, peer_id, name, authorized, is_file_transfer, is_view_camera, is_terminal);
+                                    if authorized && self.connected_at.is_none() {
+                                        self.connected_at = Some(hbb_common::tokio::time::Instant::now());
+                                        self.connected_peer = format!("{} ({})", name, peer_id);
+                                        log::error!("CONNECTED id=#{} peer_id={} name={}", id, peer_id, name);
+                                    }
                                     self.cm.add_connection(id, is_file_transfer, is_view_camera, is_terminal, port_forward, peer_id, name, avatar, authorized, keyboard, clipboard, audio, file, restart, recording, block_input, privacy_mode, from_switch, self.tx.clone());
                                     self.conn_id = id;
                                     #[cfg(target_os = "windows")]
@@ -817,12 +824,21 @@ impl<T: InvokeUiCM> IpcTaskRunner<T> {
             #[cfg(target_os = "windows")]
             file_transfer_enabled_peer: false,
             read_jobs: Vec::new(),
+            connected_at: None,
+            connected_peer: String::new(),
         };
 
         while task_runner.running {
             task_runner.run().await;
         }
         if task_runner.conn_id > 0 {
+            let duration_str = task_runner.connected_at.map(|t| {
+                let s = t.elapsed().as_secs();
+                if s < 60 { format!("{}s", s) }
+                else if s < 3600 { format!("{}m{}s", s / 60, s % 60) }
+                else { format!("{}h{}m{}s", s / 3600, (s % 3600) / 60, s % 60) }
+            }).unwrap_or_else(|| "0s".to_string());
+            log::error!("DISCONNECTED id=#{} peer={} duration={}", task_runner.conn_id, task_runner.connected_peer, duration_str);
             log::info!("cm::remove_connection id={} close={}", task_runner.conn_id, task_runner.close);
             task_runner
                 .cm

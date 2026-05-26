@@ -14,7 +14,8 @@
       "PowerShell(Get-Service *)",
       "PowerShell(sc.exe query RustDesk 2>&1)",
       "Bash(grep -E \"^.*src/[^/]+\\\\.rs$\")",
-      "PowerShell(cargo *)"
+      "PowerShell(cargo *)",
+      "PowerShell(Select-String *)"
     ]
   }
 }
