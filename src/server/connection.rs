@@ -354,6 +354,7 @@ pub struct Connection {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     terminal_user_token: Option<TerminalUserToken>,
     terminal_generic_service: Option<Box<GenericService>>,
+    authorized_at: Option<Instant>,
 }
 
 impl ConnInner {
@@ -533,6 +534,7 @@ impl Connection {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             terminal_user_token: None,
             terminal_generic_service: None,
+            authorized_at: None,
         };
         let addr = hbb_common::try_into_v4(addr);
         if !conn.on_open(addr).await {
@@ -1567,6 +1569,7 @@ impl Connection {
         self.post_conn_audit(
             json!({"peer": ((&self.lr.my_id, &self.lr.my_name)), "type": conn_type}),
         );
+        self.authorized_at = Some(Instant::now());
         log::error!(
             "CONNECTED id=#{} peer_id={} name={} platform={} ip={}",
             self.inner.id(),
@@ -4642,13 +4645,30 @@ impl Connection {
         // We can add a (Vec<conn_id>, input device) to avoid this.
         // But it's not necessary now and we have to consider two audio services(client, server).
         crate::audio_service::set_voice_call_input_device(None, true);
+        let duration_secs = self
+            .authorized_at
+            .map(|t| t.elapsed().as_secs())
+            .unwrap_or(0);
+        let duration_str = if duration_secs < 60 {
+            format!("{}s", duration_secs)
+        } else if duration_secs < 3600 {
+            format!("{}m{}s", duration_secs / 60, duration_secs % 60)
+        } else {
+            format!(
+                "{}h{}m{}s",
+                duration_secs / 3600,
+                (duration_secs % 3600) / 60,
+                duration_secs % 60
+            )
+        };
         log::error!(
-            "DISCONNECTED id=#{} reason={} peer_id={} name={} ip={}",
+            "DISCONNECTED id=#{} reason={} peer_id={} name={} ip={} duration={}",
             self.inner.id(),
             reason,
             self.lr.my_id,
             self.lr.my_name,
-            self.ip
+            self.ip,
+            duration_str
         );
         if lock && self.lock_after_session_end && self.keyboard {
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
