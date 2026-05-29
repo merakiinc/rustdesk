@@ -954,6 +954,18 @@ pub fn video_save_directory(root: bool) -> String {
         }
     }
 
+    #[cfg(windows)]
+    if let Ok(local_appdata) = std::env::var("LOCALAPPDATA") {
+        let path = std::path::Path::new(&local_appdata)
+            .join("SuporteRemoto")
+            .join("rustdesk")
+            .join("videos");
+        let dir = try_create(&path);
+        if !dir.is_empty() {
+            return dir;
+        }
+    }
+
     if let Some(user) = directories_next::UserDirs::new() {
         if let Some(video_dir) = user.video_dir() {
             let dir = try_create(&video_dir.join(&appname));
