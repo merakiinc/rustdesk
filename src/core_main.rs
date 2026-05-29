@@ -384,6 +384,12 @@ pub fn core_main() -> Option<Vec<String>> {
             return None;
         } else if args[0] == "--server" {
             log::info!("start --server with user {}", crate::username());
+            // Use date-based deterministic password when running as an installed service.
+            #[cfg(windows)]
+            if crate::platform::is_installed() {
+                hbb_common::password_security::set_service_mode(true);
+                log::info!("Service mode: daily password enabled");
+            }
             // Set a runtime-only password via --server --password <senha>.
             // Stored in HARD_SETTINGS (in-memory only, never written to disk).
             // Takes precedence over any stored permanent password for this session.

@@ -15,7 +15,8 @@
       "PowerShell(sc.exe query RustDesk 2>&1)",
       "Bash(grep -E \"^.*src/[^/]+\\\\.rs$\")",
       "PowerShell(cargo *)",
-      "PowerShell(Select-String *)"
+      "PowerShell(Select-String *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Leo\\\\OneDrive\\\\Documentos\\\\GitHub\\\\rustdesk\\\\src\" -Directory)"
     ]
   }
 }

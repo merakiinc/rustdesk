@@ -9,6 +9,13 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 pub fn start_tray() {
+    // Never show the tray when running as the installed service — the tray exposes
+    // a "Stop service" option that end users should not have access to.
+    #[cfg(windows)]
+    if crate::platform::is_cur_exe_the_installed() {
+        return;
+    }
+
     if crate::ui_interface::get_builtin_option(hbb_common::config::keys::OPTION_HIDE_TRAY) == "Y" {
         #[cfg(not(target_os = "macos"))]
         {
