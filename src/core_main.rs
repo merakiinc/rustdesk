@@ -384,11 +384,24 @@ pub fn core_main() -> Option<Vec<String>> {
             return None;
         } else if args[0] == "--server" {
             log::info!("start --server with user {}", crate::username());
-            // Use date-based deterministic password when running as an installed service.
+            // Use date-based deterministic password when running as the installed service's
+            // elevated server process. The service always launches `--server` with the
+            // winlogon/SYSTEM token (see `launch_server` -> `LaunchProcessWin(.., as_user=FALSE, ..)`),
+            // so `is_root()` (LocalSystem SID) is the precise signal that this process was
+            // spawned by the service -- unlike `is_installed()`, which is also true for any
+            // manually launched instance on a machine where RustDesk happens to be installed.
             #[cfg(windows)]
-            if crate::platform::is_installed() {
-                hbb_common::password_security::set_service_mode(true);
-                log::info!("Service mode: daily password enabled");
+            {
+                let is_system = crate::platform::is_root();
+                log::info!(
+                    "is_installed={}, is_root={}",
+                    crate::platform::is_installed(),
+                    is_system
+                );
+                if is_system {
+                    hbb_common::password_security::set_service_mode(true);
+                    log::info!("Service mode: daily password enabled");
+                }
             }
             // Set a runtime-only password via --server --password <senha>.
             // Stored in HARD_SETTINGS (in-memory only, never written to disk).
