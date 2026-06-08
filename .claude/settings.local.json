@@ -20,7 +20,10 @@
       "Bash(grep -E \"\\\\.\\(proto|rs\\)$\")",
       "Bash(xargs grep -l \"hbb_common::config\\\\|Config.*init\\\\|config_dir\")",
       "Bash(grep -n \"fn connect\\\\|fn ipc_path\\\\|pipe_name\\\\|fn get_id\\\\b\\\\|\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.\\\\\\\\\\\\\\\\pipe\\\\|postfix\" src/ipc.rs)",
-      "Bash(awk '/^pub async fn connect\\\\\\(/,/^}/' src/ipc.rs)"
+      "Bash(awk '/^pub async fn connect\\\\\\(/,/^}/' src/ipc.rs)",
+      "Bash(xargs grep -l \"usbmmidd\\\\|virtual_display\\\\|keep_alive\")",
+      "Bash(sed -n '640,660p' src/server/video_service.rs)",
+      "Bash(sed -n '714,728p' src/server/video_service.rs)"
     ]
   }
 }

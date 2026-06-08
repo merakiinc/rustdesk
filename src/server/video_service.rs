@@ -838,6 +838,17 @@ fn run(vs: VideoService) -> ResultType<()> {
                         )?;
                         frame_controller.set_send(now, send_conn_ids);
                         send_counter += 1;
+                    } else {
+                        #[cfg(windows)]
+                        if !c.is_gdi() {
+                            // DXGI stopped presenting (e.g., RDP client window minimized) and
+                            // the repeat budget is exhausted. Re-arm the GDI fallback: GDI
+                            // BitBlt reads the session's GDI framebuffer directly, which stays
+                            // valid even when the RDP display driver stops presenting via DXGI.
+                            try_gdi = 1;
+                            log::info!("WouldBlock repeat exhausted, re-arming GDI fallback");
+                        }
+                        repeat_encode_counter = 0;
                     }
                 }
             }
