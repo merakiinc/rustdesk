@@ -16,7 +16,11 @@
       "Bash(grep -E \"^.*src/[^/]+\\\\.rs$\")",
       "PowerShell(cargo *)",
       "PowerShell(Select-String *)",
-      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Leo\\\\OneDrive\\\\Documentos\\\\GitHub\\\\rustdesk\\\\src\" -Directory)"
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\Leo\\\\OneDrive\\\\Documentos\\\\GitHub\\\\rustdesk\\\\src\" -Directory)",
+      "Bash(grep -E \"\\\\.\\(proto|rs\\)$\")",
+      "Bash(xargs grep -l \"hbb_common::config\\\\|Config.*init\\\\|config_dir\")",
+      "Bash(grep -n \"fn connect\\\\|fn ipc_path\\\\|pipe_name\\\\|fn get_id\\\\b\\\\|\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\.\\\\\\\\\\\\\\\\pipe\\\\|postfix\" src/ipc.rs)",
+      "Bash(awk '/^pub async fn connect\\\\\\(/,/^}/' src/ipc.rs)"
     ]
   }
 }
