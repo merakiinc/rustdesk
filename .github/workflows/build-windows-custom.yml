@@ -150,6 +150,18 @@ jobs:
           mkdir -p ./SignOutput
           mv ./target/release/rustdesk-portable-packer.exe ./SignOutput/rustdesk-${{ env.VERSION }}-x86_64.exe
 
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build msi
+        run: |
+          pushd ./res/msi
+          python preprocess.py --arp -d ../../rustdesk
+          nuget restore msi.sln
+          msbuild msi.sln -p:Configuration=Release -p:Platform=x64 /p:TargetVersion=Windows10
+          mv ./Package/bin/x64/Release/en-us/Package.msi ../../SignOutput/rustdesk-${{ env.VERSION }}-x86_64.msi
+          sha256sum ../../SignOutput/rustdesk-*.msi
+
       - name: Upload unsigned folder (DLLs + exe)
         if: always()
         uses: actions/upload-artifact@master
@@ -165,5 +177,14 @@ jobs:
         with:
           name: rustdesk-portable-windows-x86_64
           path: SignOutput/rustdesk-${{ env.VERSION }}-x86_64.exe
+          if-no-files-found: warn
+          retention-days: 7
+
+      - name: Upload msi installer
+        if: always()
+        uses: actions/upload-artifact@master
+        with:
+          name: rustdesk-msi-windows-x86_64
+          path: SignOutput/rustdesk-${{ env.VERSION }}-x86_64.msi
           if-no-files-found: warn
           retention-days: 7
